@@ -1,14 +1,13 @@
 package tasks;
 
 import common.Person;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
 
 /*
 А теперь о горьком
@@ -21,67 +20,76 @@ P.P.S Здесь ваши правки желательно прокоммент
  */
 public class Task8 {
 
-  private long count;
+  // Далее речь о строчке 'private long count', которая была удалена поскольку:
+  // Какая прелесть! Поле класса с многозначительным философским названием.
+  // Шож, посмотрим зачем она нужна на самом деле ...
+  // Чуть позже: Так, понятно. Локальная по своей сути переменная, используемая только в методе countEven.
+  // Удалим переменную как поле класса, приведя тем самым область её видимости в соответвии с назначением.
 
   //Не хотим выдывать апи нашу фальшивую персону, поэтому конвертим начиная со второй
   public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
-      return Collections.emptyList();
-    }
-    persons.remove(0);
-    return persons.stream().map(Person::getFirstName).collect(Collectors.toList());
+    return persons.stream()
+                  .skip(1) // Раз исплользуется Stream, то вместо удаления, просто пропускаем первый элемент
+                  .map(Person::getFirstName)
+                  .collect(Collectors.toList());
   }
 
   //ну и различные имена тоже хочется
-  public Set<String> getDifferentNames(List<Person> persons) {
-    return getNames(persons).stream().distinct().collect(Collectors.toSet());
+  // Следовало бы разместить опеределение до getNames,
+  // поскольку последний используется в getDifferentNames.
+  // Тогда соблюдался бы принцип от общего (начало файла) к частному (вниз по файлу)
+  // Так же, возможно, будь метод в классе с говорящим названием первоначальное название подошло бы,
+  // а так уточним, что это getDifferentPersonsNames
+  public Set<String> getDifferentPersonsNames(List<Person> persons) {
+    // Set уже коллекция уникальных элементов => distinct был не нужен
+    // В остальном это была длинная версия того, что делает конструктор HashSet
+    return new HashSet<>(getNames(persons));
   }
 
   //Для фронтов выдадим полное имя, а то сами не могут
-  public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.getSecondName() != null) {
-      result += person.getSecondName();
-    }
-
-    if (person.getFirstName() != null) {
-      result += " " + person.getFirstName();
-    }
-
-    if (person.getSecondName() != null) {
-      result += " " + person.getSecondName();
-    }
-    return result;
+  // Ах, этот философский вопрос именование методов.
+  // Название запутает человека, решившего, что метод возвращает строковое предстваление Person.
+  // На самом деле метод возвращает строку ФИО.
+  // И да, String это деталь реализации, которую не 'зашивают' в имя.
+  public String convertPersonToFullName(Person person) {
+    // Конкатенация строк через оператор '+' в первоначальном варианте
+    // приводила к генерации промежуточных строк на каждый вызов.
+    // Ещё вместо MiddleName использовалось SecondName.
+    // У меня Stream'изм, доктор?
+    return Stream.of(person.getSecondName(), person.getFirstName(), person.getMiddleName())
+            .filter(Objects::nonNull)
+            .collect(Collectors.joining(" "));
   }
 
-  // словарь id персоны -> ее имя
-  public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
-    for (Person person : persons) {
-      if (!map.containsKey(person.getId())) {
-        map.put(person.getId(), convertPersonToString(person));
-      }
-    }
-    return map;
+  //словарь id персоны -> ее имя
+  // Как и в случаи с getDifferentPersonsNames и getPersonsNames, здесь тоже следовало бы разместить
+  // convertPersonToFullName после определения getPairsIdAndFullNameForUniquePersonsIds.
+  // Однако, это если следовать вышеизложенному принципу.
+  public Map<Integer, String> getPersonsNames(Collection<Person> persons) {
+    // Один раз поняв и подсев на Stream, потом сложно от него отказаться ;-(
+    return persons.stream()
+            .collect(toMap(Person::getId, this::convertPersonToFullName, (first, second) -> first));
   }
 
-  // есть ли совпадающие в двух коллекциях персоны?
-  public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+  //есть ли совпадающие в двух коллекциях персоны?
+  // И снова и сразу об именовании. Раз сравнение двух коллекций, вызывается через третий метод, а не метод одной из них, то
+  // можно сказать что ОНИ (they) имеют/нет одинаковые элементы, тогда по грамматике английского языка будет have вместо has.
+  // Стандартная библиотека Java богата на различные функции. Посмотрим есть ли нечто похожее.
+  // Хм, отлично есть disjoint который возвращает true "if the two specified collections have no elements in common".
+  // Да, метод решает обратную задачу, но об этом позже.
+  public boolean haveSamePersons(Collection<Person> first, Collection<Person> second) {
+    // disjoint выбрасывает NullPointerException "if either collection is null"
+    if (first == null || second == null)
+      return false;
+    // Берём отрицание от результата работы этой функции, поскольку как говорилось ранее нужно решить обратную задачу.
+    return !Collections.disjoint(first, second);
   }
 
   //...
-  public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+  // Изначально метод использовал в качестве типа формального параметра Stream, который ненадёжен в силу своей "одноразовости".
+  public long countEven(Collection<Integer> nums) {
+    // Переменная count по всем признакам локальная и её незачем делать полем класса.
+    // Более того, она вообще не нужна поскольку... ага, в Stream есть метод count)
+    return nums.stream().filter(num -> num % 2 == 0).count();
   }
 }
