@@ -92,9 +92,4 @@ public class Task8 {
     // Более того, она вообще не нужна поскольку... ага, в Stream есть метод count)
     return nums.stream().filter(num -> num % 2 == 0).count();
   }
-
-  private long count;
-  public long countEven(Stream<Integer> nums) {
-
-  }
 }
