@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.Comparator;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toMap;
@@ -28,10 +29,8 @@ public class Task1 {
 
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    Map<Integer, Integer> ordinalNumbers = IntStream.range(0, personIds.size())
-            .boxed()
-            .collect(toMap(personIds::get, ordinalNumber -> ordinalNumber));
-    Comparator<Person> byOrdinalNumbers = Comparator.comparingInt(person -> ordinalNumbers.get(person.getId()));
-    return persons.stream().sorted(byOrdinalNumbers).toList();
+    Map<Integer, Person> personsInfo = persons.stream()
+            .collect(toMap(Person::getId, Function.identity()));
+    return personIds.stream().map(personsInfo::get).toList();
   }
 }
