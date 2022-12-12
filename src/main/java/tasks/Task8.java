@@ -79,8 +79,9 @@ public class Task8 {
   public Map<Integer, String> getPairsIdAndFullNameForUniquePersonsIds(Collection<Person> persons) {
     // Один раз поняв и подсев на Stream, потом сложно от него отказаться ;-(
     Set<Integer> added = new HashSet<>(persons.size());
+    Predicate<Person> notDuplicate = person -> added.add(person.getId()); // Убираются дубликаты. То что в исходном варианте делалось через containsKey
     return persons.stream()
-            .filter(person -> added.add(person.getId())) // Убираются дубликаты. То что в исходном варианте делалось через containsKey
+            .filter(notDuplicate)
             .collect(toMap(Person::getId, this::convertPersonToFullName));
   }
 
