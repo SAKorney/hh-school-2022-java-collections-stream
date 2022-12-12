@@ -27,12 +27,7 @@ public class Task8Test {
     @Test
     void getPersonsNamesEmptyList() {
         List<Person> persons = Collections.emptyList();
-        assertEquals(task.getPersonsNames(persons), Collections.emptyList());
-    }
-
-    @Test
-    void getPersonsNamesNullList() {
-        assertEquals(task.getPersonsNames(null), Collections.emptyList());
+        assertEquals(task.getNames(persons), Collections.emptyList());
     }
 
     @Test
@@ -40,7 +35,7 @@ public class Task8Test {
         List<Person> persons = Stream.of(
                 new Person(-1, "Dummy", now)).toList();
         var expectedResult = persons.stream().skip(1).map(Person::getFirstName).toList();
-        assertEquals(task.getPersonsNames(persons), expectedResult);
+        assertEquals(task.getNames(persons), expectedResult);
     }
 
     @Test
@@ -49,7 +44,7 @@ public class Task8Test {
                 new Person(-1, "Dummy", now),
                 new Person(1, "Tester", now)).toList();
         var expectedResult = persons.stream().skip(1).map(Person::getFirstName).toList();
-        assertEquals(task.getPersonsNames(persons), expectedResult);
+        assertEquals(task.getNames(persons), expectedResult);
     }
 
     @Test
@@ -97,7 +92,7 @@ public class Task8Test {
                 new Person(1, "Tester", now),
                 new Person(1, "User", now)).toList();
 
-        assertEquals(task.getPairsIdAndFullNameForUniquePersonsIds(persons), Map.of(1, "Tester"));
+        assertEquals(task.getPersonsNames(persons), Map.of(1, "Tester"));
     }
 
     @Test

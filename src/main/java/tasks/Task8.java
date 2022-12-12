@@ -27,14 +27,7 @@ public class Task8 {
   // Удалим переменную как поле класса, приведя тем самым область её видимости в соответвии с назначением.
 
   //Не хотим выдывать апи нашу фальшивую персону, поэтому конвертим начиная со второй
-  // Название getPersonNames будет более говорящее
-  public List<String> getPersonsNames(List<Person> persons) {
-    // Проверка на null будет кстати, т.к. далее вызывается stream и никто не гарантирует, что фактический параметр не null.
-    // В отличии от проверки size, которая разве что сэкономит на инициализации Stream. Но если уж написано, пусть себе остаётся.
-    if (persons == null || persons.size() == 0) {
-      return Collections.emptyList();
-    }
-
+  public List<String> getNames(List<Person> persons) {
     return persons.stream()
                   .skip(1) // Раз исплользуется Stream, то вместо удаления, просто пропускаем первый элемент
                   .map(Person::getFirstName)
@@ -50,7 +43,7 @@ public class Task8 {
   public Set<String> getDifferentPersonsNames(List<Person> persons) {
     // Set уже коллекция уникальных элементов => distinct был не нужен
     // В остальном это была длинная версия того, что делает конструктор HashSet
-    return new HashSet<>(getPersonsNames(persons));
+    return new HashSet<>(getNames(persons));
   }
 
   //Для фронтов выдадим полное имя, а то сами не могут
@@ -69,14 +62,10 @@ public class Task8 {
   }
 
   //словарь id персоны -> ее имя
-  // Поскольку метод возвращает коллекцию связку id + ФИО, название отражающее суть получилось длинноватым.
-  // Откуда следует, что метод делает сразу несколько вещей:
-  //  убирает дубликаты по Id И затем делает выборку ФИО.
-  // Нужно ли её разбивать на две вопрос скорее к бизнес логике.
   // Как и в случаи с getDifferentPersonsNames и getPersonsNames, здесь тоже следовало бы разместить
   // convertPersonToFullName после определения getPairsIdAndFullNameForUniquePersonsIds.
   // Однако, это если следовать вышеизложенному принципу.
-  public Map<Integer, String> getPairsIdAndFullNameForUniquePersonsIds(Collection<Person> persons) {
+  public Map<Integer, String> getPersonsNames(Collection<Person> persons) {
     // Один раз поняв и подсев на Stream, потом сложно от него отказаться ;-(
     return persons.stream()
             .collect(toMap(Person::getId, this::convertPersonToFullName, (first, second) -> first));
@@ -97,22 +86,15 @@ public class Task8 {
   }
 
   //...
-  // countEven? Уххх! Очень странный во всех отношениях метод.
-  // Скорее всего нарушает принцип S из SOLID (нет cohesion с логикой задач, решаемых остальными методами).
   // Изначально метод использовал в качестве типа формального параметра Stream, который ненадёжен в силу своей "одноразовости".
-  // Что физически означают nums так и останется тайной покрытой мраком.
-  // Вообще, подобные методы имеют смысл разве как DSL, в остальном это искусственые ограничения.
-  // Так например, что будет если понадобится countOdd? Методы будут различаться исключительно в условиях фильтрации.
-  // Передавать условие фильтрации через параметр? Но, тогда это практически тот же самый filter.
-  // Или вот ещё, что если понадобится посчитать элементы произвольного типа, удовлетворяющие какому-то условию?
   public long countEven(Collection<Integer> nums) {
     // Переменная count по всем признакам локальная и её незачем делать полем класса.
     // Более того, она вообще не нужна поскольку... ага, в Stream есть метод count)
     return nums.stream().filter(num -> num % 2 == 0).count();
   }
 
-  // Короче, если так уж нужна функция комбинирующая filter и count, то пусть он будет generic и на все случаи жизни!
-  public <T> long countElementsForCondition(Collection<T> collection, Predicate<T> condition) {
-    return collection.stream().filter(condition).count();
+  private long count;
+  public long countEven(Stream<Integer> nums) {
+
   }
 }
