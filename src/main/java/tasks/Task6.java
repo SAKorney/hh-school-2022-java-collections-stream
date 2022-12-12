@@ -22,12 +22,15 @@ public class Task6 {
   public static Set<String> getPersonDescriptions(Collection<Person> persons,
                                                   Map<Integer, Set<Integer>> personAreaIds,
                                                   Collection<Area> areas) {
-    Function<Person, Set<Integer>> getAreaIdsFor = (person) -> personAreaIds.get(person.getId());
-    Map<Integer, String> areasDictionary = areas.stream().collect(Collectors.toMap(Area::getId, Area::getName));
-    BiFunction<Person, Integer, String> format =
-            (person, areaId) -> String.format("%s - %s", person.getFirstName(), areasDictionary.get(areaId));
+    Map<Integer, Area> areasInfo = areas.stream().collect(Collectors.toMap(Area::getId, Function.identity()));
     return  persons.stream()
-            .flatMap(person -> getAreaIdsFor.apply(person).stream().map(areaId -> format.apply(person, areaId)))
+            .flatMap(person -> personAreaIds.get(person.getId())
+                    .stream()
+                    .map(areaId -> getPersonDescription(person, areasInfo.get(areaId))))
             .collect(Collectors.toSet());
+  }
+
+  private static String getPersonDescription(Person person, Area area) {
+    return String.format("%s - %s", person.getFirstName(), area.getName());
   }
 }
