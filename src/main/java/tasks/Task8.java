@@ -78,11 +78,8 @@ public class Task8 {
   // Однако, это если следовать вышеизложенному принципу.
   public Map<Integer, String> getPairsIdAndFullNameForUniquePersonsIds(Collection<Person> persons) {
     // Один раз поняв и подсев на Stream, потом сложно от него отказаться ;-(
-    Set<Integer> added = new HashSet<>(persons.size());
-    Predicate<Person> notDuplicate = person -> added.add(person.getId()); // Убираются дубликаты. То что в исходном варианте делалось через containsKey
     return persons.stream()
-            .filter(notDuplicate)
-            .collect(toMap(Person::getId, this::convertPersonToFullName));
+            .collect(toMap(Person::getId, this::convertPersonToFullName, (first, second) -> first));
   }
 
   //есть ли совпадающие в двух коллекциях персоны?
